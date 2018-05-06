@@ -1,29 +1,29 @@
 {
-  "name": "pv-csv-parser",
+  "name": "ptsv-csv-parser",
   "version": "0.0.1",
-  "description": "A simple CSV Parser",
+  "description": "A simple .csv parser",
   "main": "index.js",
+  "dependencies": {
+    "fast-csv": "^2.4.1"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/paulopontovaz/pv-csv-parser.git"
+    "url": "git+https://github.com/paulopontovaz/ptsv-csv-parser.git"
   },
   "keywords": [
-    "parser",
     "csv",
+    "csvparser",
     "csv-parser",
-    "csvparser"
+    "parser"
   ],
   "author": "Paulo Vaz <paulopontovaz@gmail.com>",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/paulopontovaz/pv-csv-parser/issues"
+    "url": "https://github.com/paulopontovaz/ptsv-csv-parser/issues"
   },
-  "homepage": "https://github.com/paulopontovaz/pv-csv-parser#readme",
-  "devDependencies": {},
-  "dependencies": {
-    "fast-csv": "^2.4.1"
-  }
+  "homepage": "https://github.com/paulopontovaz/ptsv-csv-parser#readme"
 }
