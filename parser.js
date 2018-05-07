@@ -12,6 +12,10 @@ module.exports = class Parser {
     constructor(csvFilePath, parseObjectClass) {
         this.csvFilePath = csvFilePath
         this.parseObjectClass = parseObjectClass
+
+        //Enforcing the inheritance from the CsvDataObjectClass
+        if(!(parseObjectClass.prototype instanceof CsvObjectData))
+            throw new Error("The class passed as argument to the Parser class constructor has to extend the CsvDataObject class")
     }
 
     parseCsv () {
