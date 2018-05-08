@@ -1,4 +1,6 @@
 const fastCsv = require('fast-csv')
+const camelCase = require('camelcase')
+const CsvDataObject = require('./csv-data-object')
 
 module.exports = class Parser {
     /*
@@ -9,35 +11,66 @@ module.exports = class Parser {
         instantiate objects from whatever class the user wants, parsing from
         the csv rows.
     */
-    constructor(csvFilePath, parseObjectClass) {
+    constructor(csvFilePath, parseObjectClass = null, hasHeaders = true) {
         this.csvFilePath = csvFilePath
         this.parseObjectClass = parseObjectClass
+        this.hasHeaders = hasHeaders
 
         //Enforcing the inheritance from the CsvDataObjectClass
-        if(!(parseObjectClass.prototype instanceof CsvObjectData))
+        if(parseObjectClass && !(parseObjectClass.prototype instanceof CsvDataObject))
             throw new Error("The class passed as argument to the Parser class constructor has to extend the CsvDataObject class")
     }
 
     parseCsv () {
         return new Promise((resolve, reject) => {
-            const headers = this.parseObjectClass.getPropertyNames()
-            let csvObjectList = []
+            let csvObjectList = [],
+                propertyNames = null
 
-            fastCsv.fromPath(this.csvFilePath, { headers: false })
-                .on('data', row => {
+            fastCsv.fromPath(this.csvFilePath, { headers: this.hasHeaders })
+                .on('data', item => {
                     /*
-                        Inserting an object passing a destructured row as argument.
-                        This way no matter how many properties the row item has the object 
-                        will still be instantiated correctly, considering the properties are 
-                        in the right order coming from the .csv file, compared to the class's 
-                        constructor arguments. 
-                        Destructuring is a feature available for ES6 and newer versions of ECMA Script.
+                            If propertyNames is null, the first line read from the .csv will be the headers.
+                        If propertyNames is NOT null, it means we have an object row (as opposed to a header 
+                        row), so we proceed to add the element to the list.
+                            Here we set the propertyNames array equal to a list of the headers formatted 
+                        as camelCase.                        
+                            These strings will be used to set the properties of the object to be added to the 
+                        list.
+                            It is only possible to use the property names if there is a header row in the .csv 
+                        file. If there is NOT a header row, the parseObjectClass is NEEDED in order for the 
+                        parsing to complete, otherwise there won't be any names for the properties of the 
+                        objects in the list.
                     */
-                    csvObjectList.push(new this.parseObjectClass(...row))
+                    if(!propertyNames) {
+                        if (this.parseObjectClass)
+                            //Inserting an object passing a destructured item (the "...item" part) as argument. 
+                            //Destructuring is a feature available for ES6 and newer versions of ECMA Script.
+                            csvObjectList.push(new this.parseObjectClass(...item))
+                        else if (this.hasHeaders)
+                           propertyNames = item.map(header => camelCase(header))
+                    } 
+                    else if (!this.parseObjectClass){
+                        /*
+                            Here populate iteratively the item to be inserted in the array, using 
+                            the "reduce" function.
+                            -> "newItem" is the accumulator, initialized as an empty object
+                            -> "propertyName" is a string using for setting the value of a 
+                            property in newItem
+                            -> "index" is the index of the propertyName in the headers array
+                        */
+                        csvObjectList.push(propertyNames.reduce((newItem, propertyName, index) => {
+                            newItem[propertyName] = item[index]
+                            return newItem
+                        }, {}))
+                    }
+                    /*                      
+                            With the setup above, no matter how many properties 
+                        the item has, the object will still be instantiated correctly, considering 
+                        the properties are in the right order coming from the .csv file.
+                    */
                 })
                 .on('end', data => {
-                    //Removing the item whose properties were set as the header names before returning.
-                    resolve(csvObjectList.slice(1))
+                    resolve(csvObjectList)
                 })
                 .on('error', data => {
                     reject(data)
