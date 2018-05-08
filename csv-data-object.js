@@ -6,8 +6,9 @@
 module.exports = class CsvDataObject {
 	constructor(){}
 
-	//Gets the names of the properties of the class that extends this one
-	//in order to parse the .csv file rows to objects of that class.
+	/* The implementation of this method has to return the names of the properties 
+	of the class that extends this one in order to parse the .csv file rows to 
+	objects of that class. */
 	static getPropertyNames () {
 		throw new Error("The method 'getPropertyNames' has to be implemented!")
 	}
