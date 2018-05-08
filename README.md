@@ -2,11 +2,15 @@
 
 A CSV parser created as an exercise for applying JavaScript concepts.
 
-This package is used for parsing a .csv file to a JSON structure specified by a class which must `extend` the `CsvDataObject` class. Both the `Parser` class and the `CsvDataObject` class are provided by this package and are to be used together in order for the parsing to work.
+This package is used for parsing a .csv file to a JSON structure specified by a class which must `extend` the `CsvDataObject` class. Both the `Parser` class and the `CsvDataObject` class are provided by this package. It is possible for each row parsed from the .csv to be an instance of a provided class. 
+The provided class will have to: 
+- Be passed in to the parser's constructor (second argument), 
+- Extend from the `CsvDataObject` class,
+- and implement its `getPropertyNames` function.
 
 Please refer to the [Morning Train Challenge](https://github.com/paulopontovaz/morning-train-challenge) repository for an example of this package in action.
 
-### Example
+### Examples
 Handling request from client receiving the CSV file:
 ```javascript
 
