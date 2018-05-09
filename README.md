@@ -4,7 +4,7 @@ A CSV parser created as an exercise for applying JavaScript concepts.
 
 This package is used for parsing a .csv file to a JSON structure specified by a class which must `extend` the `CsvDataObject` class. Both the `Parser` class and the `CsvDataObject` class are provided by this package. It is possible for each row parsed from the .csv to be an instance of a provided class. 
 The provided class will have to: 
-- Be passed in to the parser's constructor (second argument), 
+- Be passed in to the parser's constructor, 
 - Extend from the `CsvDataObject` class,
 - and implement its `getPropertyNames` function.
 

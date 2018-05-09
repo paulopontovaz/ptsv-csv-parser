@@ -13,13 +13,13 @@ module.exports = class Parser {
         if "hasHeaders" is set to true. If there are no headers and there is no class set, 
         each item on the result list will be an array of values.
     */
-    constructor(csvFilePath, parseObjectClass = null, hasHeaders = true) {
+    constructor(csvFilePath, hasHeaders = true, parseObjectClass = null) {
         this.csvFilePath = csvFilePath
-        this.parseObjectClass = parseObjectClass                            
         this.hasHeaders = typeof hasHeaders === "boolean" ?     //Guaranteeing that the value 
-            hasHeaders : hasHeaders.toLowerCase() === "true"    //of hasHeaders is boolean            
+            hasHeaders : hasHeaders.toLowerCase() === "true"    //of hasHeaders is boolean
+        this.parseObjectClass = parseObjectClass
 
-        //Enforcing the inheritance from the CsvDataObjectClass, if a class was passed among the arguments.
+        //Enforcing the inheritance from the CsvDataObjectClass, if a class was passed in.
         if(parseObjectClass && !(parseObjectClass.prototype instanceof CsvDataObject))
             throw new Error("The class passed as argument to the Parser class constructor has to extend the CsvDataObject class")
     }
@@ -39,37 +39,41 @@ module.exports = class Parser {
     parseCsv () {
         return new Promise((resolve, reject) => {
             let csvObjectList = [],
-                propertyNames = null
+                propertyNames = null            
 
             fastCsv.fromPath(this.csvFilePath)
                 .on('data', item => {
-                    if (this.parseObjectClass)
+                    if (this.parseObjectClass) {
                         /* If "parseObjectClass" was set, we simply instantiate an object through 
-                        deconstruction (as in "...item") and push it into the list. */
-                        csvObjectList.push(new this.parseObjectClass(...item))
-                    else if (this.hasHeaders) {
-                        if (propertyNames) {
-                            /* Using "reduce" we can iterate over the "propertyNames" and mount an object,
-                            obtaining its properties from the "item". */
-                            const mountedItem = propertyNames.reduce((newItem, propertyName, index) => {
-                                newItem[propertyName] = item[index]
-                                return newItem
-                            }, {})
-
-                            csvObjectList.push(mountedItem)
-                        }                        
-                        else //Obtain the property names from the .csv from the first row.
-                            propertyNames = item.map(header => camelCase(header))
+                        deconstruction (as in "...item"). */
+                        item = new this.parseObjectClass(...item)
+                    } 
+                    else {
+                        if (this.hasHeaders) {
+                            if (propertyNames) {
+                                /* Using "reduce" we can iterate over the "propertyNames" and mount an object,
+                                obtaining its properties from the "item". */
+                                item = propertyNames.reduce((mountedItem, propertyName, index) => {
+                                    /* When the property does not have a corresponding header,
+                                    the 'index' is used as an alias so that the property's name
+                                    doesn't get set to an empty string */
+                                    mountedItem[propertyName || index] = item[index]
+                                    return mountedItem
+                                }, {})                            
+                            }                        
+                            else //Obtain the property names from the .csv from the first row.
+                                propertyNames = item.map(header => camelCase(header))                            
+                        }                                              
                     }
-                    else
-                        /* If there is no source of property names (no headers) nor a class for item 
-                        to have its properties set, then the item is pushed as is. */
-                        csvObjectList.push(item)                    
+
+                    /* When there is no source of property names (no headers) nor a class for item 
+                    to have its properties set, then the item is pushed as is. */  
+                    csvObjectList.push(item)
                 })
                 .on('end', data => {
                     /* If the csv has headers, the list has to remove the first element, which 
                     is the one whose values are the headers. */
-                    const list = this.headers ? csvObjectList.splice(1) : csvObjectList
+                    const list = this.hasHeaders ? csvObjectList.slice(1) : csvObjectList
                     resolve(list)
                 })
                 .on('error', data => {
